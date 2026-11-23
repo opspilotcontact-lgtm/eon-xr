@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Eón</title>
+<style>
+  :root {
+    --fondo: #05060a; --panel: rgba(12,14,22,.78); --linea: rgba(255,255,255,.09); --tinta: #eef0f5; --suave: #9aa1b2;
+    --sol: #ffc96b; --real: #7fb2ff; --peligro: #ff7a5a;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--tinta);
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--fondo); }
+  #lienzo { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  button { font: inherit; color: inherit; cursor: pointer; border: 1px solid var(--linea); background: rgba(255,255,255,.04); padding: 8px 12px; border-radius: 0; font-size: 13px; }
+  button:hover:not(:disabled) { border-color: rgba(255,255,255,.35); }
+  button:disabled { opacity: .35; cursor: default; }
+  button.on { background: var(--tinta); color: #0b0d14; border-color: var(--tinta); }
+  .caja { background: var(--panel); backdrop-filter: blur(10px); border: 1px solid var(--linea); }
+  h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--suave); font-weight: 600; margin: 0 0 8px; }
+
+  #reloj { position: fixed; top: 14px; left: 14px; width: 340px; padding: 16px 18px; z-index: 5; }
+  #era { font-size: 26px; font-weight: 700; letter-spacing: -.01em; }
+  #hace { font-size: 15px; margin-top: 2px; }
+  #anio { color: var(--suave); font-size: 13px; }
+  #desde { color: var(--suave); font-size: 12px; margin-top: 6px; }
+  .barra { position: relative; height: 6px; background: rgba(255,255,255,.08); margin: 14px 0 6px; }
+  .barra i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--sol); }
+  .barra b { position: absolute; top: -3px; width: 1px; height: 12px; background: rgba(255,255,255,.35); }
+  #divTxt { display: flex; justify-content: space-between; font-size: 12px; color: var(--suave); margin-top: 12px; }
+  #divTxt strong { color: var(--tinta); font-variant-numeric: tabular-nums; }
+  #divBarra i { background: linear-gradient(90deg, var(--real), var(--peligro)); }
+  #vel { font-size: 12px; color: var(--sol); margin-top: 8px; font-variant-numeric: tabular-nums; }
+
+  #sucesos { position: fixed; top: 240px; left: 14px; width: 340px; display: flex; flex-direction: column; gap: 6px; z-index: 4; pointer-events: none; }
+  .suceso { padding: 9px 12px; font-size: 13px; line-height: 1.35; border-left: 3px solid var(--sol); animation: entra .4s ease-out; }
+  .suceso.consecuencia { border-left-color: var(--peligro); }
+  .suceso small { display: block; color: var(--suave); font-size: 11px; margin-top: 2px; }
+  @keyframes entra { from { opacity: 0; transform: translateX(-8px); } }
+
+  #datos { position: fixed; top: 14px; right: 14px; width: 340px; max-height: calc(100% - 110px); overflow: auto; padding: 16px 18px; z-index: 5; }
+  #datos table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-bottom: 14px; }
+  #datos th { text-align: right; font-weight: 600; font-size: 10.5px; color: var(--suave); padding: 0 0 4px 8px; }
+  #datos th:first-child { text-align: left; padding-left: 0; }
+  #datos td { padding: 5px 0 5px 8px; border-top: 1px solid var(--linea); text-align: right; font-variant-numeric: tabular-nums; vertical-align: top; }
+  #datos td:first-child { text-align: left; color: var(--suave); padding-left: 0; }
+  #datos td.real { color: var(--real); }
+  #datos td.ancho { text-align: right; }
+  #curiosidad { font-size: 13px; line-height: 1.5; padding: 12px 14px; background: rgba(255,201,107,.08); border-left: 3px solid var(--sol); }
+  #curiosidad h2 { color: var(--sol); }
+
+  #mando { position: fixed; left: 14px; right: 14px; bottom: 14px; display: flex; align-items: center; gap: 8px; padding: 8px; z-index: 6; flex-wrap: wrap; }
+  #mando .grupo { display: flex; gap: 4px; }
+  #mando .sep { flex: 1; }
+  #poderes button { display: flex; align-items: center; gap: 7px; }
+  #poderes button i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  #btnAR, #btnVR { background: var(--tinta); color: #0b0d14; font-weight: 600; }
+
+  #ayuda { position: fixed; left: 50%; top: 18px; transform: translateX(-50%); padding: 9px 16px; font-size: 13px; z-index: 7; pointer-events: none; transition: opacity .6s; }
+  #aviso { position: fixed; left: 50%; bottom: 80px; transform: translateX(-50%); padding: 10px 16px; font-size: 13px; z-index: 8; }
+  #btnDatos { display: none; }
+
+  @media (max-width: 900px) {
+    #reloj, #sucesos { width: 280px; }
+    #datos { top: auto; bottom: 120px; left: 14px; right: 14px; width: auto; max-height: 45vh; }
+    body:not(.ver-datos) #datos { display: none; }
+    #btnDatos { display: block; }
+    #ayuda { display: none; }
+  }
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/","iwer":"https://cdn.jsdelivr.net/npm/iwer@2.8.0/build/iwer.module.min.js","@iwer/devui":"https://cdn.jsdelivr.net/npm/@iwer/devui@2.8.0/build/iwer-devui.module.min.js","@iwer/sem":"https://cdn.jsdelivr.net/npm/@iwer/sem@2.8.0/build/es-min/index.min.js"}}</script>
+</head>
+<body>
+<canvas id="lienzo"></canvas>
+
+<section id="reloj" class="caja">
+  <div id="era">—</div>
+  <div id="hace">Cargando el universo…</div>
+  <div id="anio"></div>
+  <div id="desde"></div>
+  <div class="barra" id="tiempoBarra" title="Avance de la partida: de la Tierra recién nacida a hoy"><i></i></div>
+  <div id="divTxt"><span>Divergencia con la historia real</span><strong id="divNum">0 %</strong></div>
+  <div class="barra" id="divBarra"><i></i></div>
+  <div id="vel"></div>
+</section>
+
+<section id="sucesos"></section>
+
+<aside id="datos" class="caja">
+  <h2>Datos del mundo</h2>
+  <div id="tablas"></div>
+  <div id="curiosidad"><h2>¿Sabías que…?</h2><div id="curTxt"></div></div>
+</aside>
+
+<footer id="mando" class="caja">
+  <div class="grupo" id="velocidades">
+    <button data-vel="0" title="Espacio">Pausa</button>
+    <button data-vel="1">×1</button>
+    <button data-vel="3">×3</button>
+    <button data-vel="8">×8</button>
+  </div>
+  <div class="grupo" id="poderes"></div>
+  <span class="sep"></span>
+  <button id="btnDatos">Datos</button>
+  <button id="btnNueva" title="Otro planeta con otra semilla">Nueva partida</button>
+  <button id="btnAR" disabled title="Realidad mixta: el planeta sobre tu mesa (Quest)">Entrar en RM</button>
+  <button id="btnVR" disabled title="Realidad virtual (Quest)">Entrar en RV</button>
+</footer>
+
+<div id="ayuda" class="caja">Arrastrá el sol alrededor del planeta para que pase el tiempo</div>
+<div id="aviso" class="caja" hidden></div>
+<!-- ?emular: emulador de gafas (IWER) antes de arrancar; ver js/emulador.js -->
+<script type="module">if (new URLSearchParams(location.search).has('emular')) await import('./js/emulador.js').catch(e => console.error('Emulador WebXR no disponible', e)); await import('./js/app.js');</script>
+</body>
+</html>
