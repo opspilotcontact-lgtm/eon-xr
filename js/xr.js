@@ -9,12 +9,12 @@ import { aviso } from './hud.js';
 const UP = new THREE.Vector3(0, 1, 0);
 const yawQ = a => new THREE.Quaternion().setFromAxisAngle(UP, a);
 const angXZ = v => Math.atan2(-v.z, v.x);
-export const ESCALA_XR = 0.15;          // radio del planeta en metros
-const ESC_MIN = 0.05, ESC_MAX = 0.6;
-const SOBRE_MESA = 0.32;                // centro del planeta por encima de la mesa (m)
+export const ESCALA_XR = 0.12;          // metros por unidad: el valle (6 u) mide ~72 cm sobre la mesa
+const ESC_MIN = 0.03, ESC_MAX = 3.0;     // hasta ×25: una persona del valle llega a medir ~14 cm
+const SOBRE_MESA = 0.056;               // origen del mundo por encima de la mesa (m): la base del diorama queda apoyada
 const BUSCAR_MESA = 8;                  // segundos buscando una mesa al entrar en RM
 
-export function montarXR({ renderer, scene, camera, mundo, planeta, sol, paleta, carteles, estrellas, fondo, reloj, juego }) {
+export function montarXR({ renderer, scene, camera, mundo, cielo, golpeValle, planeta, sol, paleta, carteles, estrellas, fondo, reloj, juego }) {
   const btnVR = document.getElementById('btnVR'), btnAR = document.getElementById('btnAR');
   function comprobarSoporte() {
     if (!navigator.xr) return;
@@ -68,22 +68,24 @@ export function montarXR({ renderer, scene, camera, mundo, planeta, sol, paleta,
   function objetivo(c) {
     // con la mano cerca del sol basta (pellizcarlo «en el aire»)
     if (posDe(c).distanceTo(sol.malla.getWorldPosition(new THREE.Vector3())) < 0.07) return { tipo: 'sol', dist: 0 };
-    const candidatos = [sol.golpe, planeta.golpe, ...(paleta.grupo.visible ? paleta.orbes : [])];
+    const gv = golpeValle();
+    const candidatos = [sol.golpe, planeta.golpe, gv, ...(paleta.grupo.visible ? paleta.orbes : [])];
     const h = rayoDe(c).intersectObjects(candidatos, false)[0];
     if (!h) return null;
     if (h.object === sol.golpe) return { tipo: 'sol', dist: h.distance };
     if (h.object === planeta.golpe) return { tipo: 'planeta', punto: h.point, dist: h.distance };
+    if (h.object === gv) return { tipo: 'valle', punto: h.point, dist: h.distance };
     return { tipo: 'orbe', poder: h.object.userData.poder, dist: h.distance };
   }
-  // ángulo de la mano alrededor del planeta, en el plano de la órbita del sol
-  function anguloDe(c) { const l = mundo.worldToLocal(posDe(c)); return Math.atan2(-l.z, l.x); }
+  // ángulo de la mano alrededor del globo, en el plano de la órbita del sol
+  function anguloDe(c) { const l = cielo.worldToLocal(posDe(c)); return Math.atan2(-l.z, l.x); }
 
   function alPulsar(c) {
     if (!modo) return;
     const o = objetivo(c);
     if (o?.tipo === 'sol' && !agarreSol) { agarreSol = c; reloj.agarrar(anguloDe(c)); pulso(c, 0.4, 30); juego.alAgarrarSol(); return; }
     if (o?.tipo === 'orbe') { juego.seleccionar(juego.poder === o.poder ? null : o.poder); pulso(c, 0.3, 25); return; }
-    if (o?.tipo === 'planeta' && juego.poder) { juego.aplicar(o.punto); pulso(c, 0.7, 60); return; }
+    if ((o?.tipo === 'planeta' || o?.tipo === 'valle') && juego.poder) { if (juego.aplicar(o.punto, o.tipo)) pulso(c, 0.7, 60); return; }
     if (esMano(c) || !o) agarrarMundo(c);
   }
   function alSoltar(c) {
@@ -151,7 +153,7 @@ export function montarXR({ renderer, scene, camera, mundo, planeta, sol, paleta,
   }
   function colocarDelante() {
     const h = cabeza(), T = h.clone().addScaledVector(adelante(), 0.8);
-    T.y = Math.max(sueloY + 0.7, h.y - 0.3);
+    T.y = Math.max(sueloY + 0.7, h.y - 0.55);
     ponerMundo(T, false);
   }
   function pasoAnim(dt) {

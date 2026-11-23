@@ -1,4 +1,5 @@
-// Eón · F0: escena, bucle, ratón y cableado con el worker de simulación.
+// Eón: escena, bucle, ratón y cableado con el worker de simulación.
+// El Valle (la parcela con personitas) es el protagonista; el globo chico de encima es el clima y el reloj.
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { crearPlaneta } from './vista/planeta.js';
@@ -11,6 +12,8 @@ import { montarXR } from './xr.js';
 import { PODERES } from './poderes.js';
 import { formatearTiempo } from './sim/canon.js';
 import { contenidoDatos } from './datos.js';
+import { crearValle } from './valle/valle.js';
+import { REGALOS } from './valle/regalos.js';
 
 const params = new URLSearchParams(location.search);
 let semilla = Number(params.get('semilla')) || Math.floor(Math.random() * 1e9);
@@ -28,14 +31,22 @@ const scene = new THREE.Scene();
 const fondo = new THREE.Color('#05060a');
 scene.background = fondo;
 const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.01, 200);
-camera.position.set(0.8, 1.4, 6.2);
+const CAM0 = new THREE.Vector3(0, 3.4, 7.2), MIRA0 = new THREE.Vector3(0, 0.35, 0);
+camera.position.copy(CAM0);
 
 const mundo = new THREE.Group(); mundo.name = 'mundo';
 scene.add(mundo);
 const planeta = crearPlaneta();
 const sol = crearSol();
-mundo.add(planeta.grupo, sol.grupo, sol.luz, sol.objetivo);
-scene.add(new THREE.HemisphereLight('#9fb4ff', '#1a1410', 0.18));
+// el cielo: globo chico flotando detrás del valle, con el sol que orbita (= el tiempo)
+const cielo = new THREE.Group(); cielo.name = 'cielo';
+cielo.position.set(0, 2.25, -3.5); cielo.scale.setScalar(0.42);
+cielo.add(planeta.grupo, sol.grupo, sol.luz, sol.objetivo);
+mundo.add(cielo);
+scene.add(new THREE.HemisphereLight('#c8d4ff', '#3a2c20', 0.65));
+// zona del valle en el planeta (para que el clima soltado sobre el valle llegue también al globo)
+const VALLE_UV = { u: 0.53, v: 0.38 };
+let valle = null;
 
 // estrellas (escritorio y RV)
 const estrellas = (() => {
@@ -54,9 +65,9 @@ mundo.add(paleta.grupo);
 
 // carteles de RM/RV: rótulo sobre el planeta y panel de datos a un lado (en el escritorio va en HTML)
 const rotulo = crearCartel(1024, 300, 2.3);
-rotulo.sprite.position.set(0, 1.85, 0); rotulo.sprite.visible = false;
+rotulo.sprite.position.set(0, 3.55, -3.5); rotulo.sprite.visible = false;
 const panelDatos = crearCartel(1024, 1280, 2.1);
-panelDatos.sprite.position.set(-3.4, 0.35, 0.6); panelDatos.sprite.visible = false;
+panelDatos.sprite.position.set(-4.4, 1.3, 0.2); panelDatos.sprite.visible = false;
 mundo.add(rotulo.sprite, panelDatos.sprite);
 
 // ---------- estado de la partida ----------
@@ -68,19 +79,34 @@ const juego = {
   poder: null,
   seleccionar(id) {
     juego.poder = id;
-    hud.marcarPoder(id); paleta.seleccionar(id); xr?.marcarPoder(id ? PODERES[id].color : null);
+    const P = id && (PODERES[id] || REGALOS[id]);
+    hud.marcarPoder(id); paleta.seleccionar(id); xr?.marcarPoder(P ? P.color : null);
     lienzo.style.cursor = id ? 'crosshair' : '';
   },
-  aplicar(puntoMundo) {
-    if (!juego.poder || !worker) return;
-    const { u, v } = planeta.uvDePunto(puntoMundo);
-    worker.postMessage({ tipo: 'intervenir', poder: juego.poder, u, v });
-    if (reloj.velocidad < 0.05) aviso(`${PODERES[juego.poder].nombre} lista: su efecto se verá cuando pase el tiempo`);
+  // donde: 'planeta' o 'valle'. Los regalos solo van al valle; el clima a los dos
+  aplicar(puntoMundo, donde = 'planeta') {
+    if (!juego.poder || !worker) return false;
+    const id = juego.poder;
+    if (REGALOS[id]) {
+      if (donde !== 'valle') { juego.avisar('Los regalos se sueltan sobre el valle'); return false; }
+      const r = valle.aplicar(id, puntoMundo);
+      if (!r.ok) { juego.avisar(r.motivo); return false; }
+      if (id === 'bomba') worker.postMessage({ tipo: 'intervenir', poder: 'helada', ...VALLE_UV });
+      juego.seleccionar(null);
+      if (reloj.velocidad < 0.05) juego.avisar(`${REGALOS[id].nombre}: girá el sol para ver qué pasa`);
+      return true;
+    }
+    const { u, v } = donde === 'valle' ? VALLE_UV : planeta.uvDePunto(puntoMundo);
+    if (donde === 'valle') valle.aplicar(id, puntoMundo);
+    worker.postMessage({ tipo: 'intervenir', poder: id, u, v });
+    if (reloj.velocidad < 0.05) juego.avisar(`${PODERES[id].nombre} lista: su efecto se verá cuando pase el tiempo`);
+    return true;
   },
+  avisar(txt) { aviso(txt); juego.avisoXR(txt); },
   alAgarrarSol() { solTocado = true; hud.ayuda(null); },
   avisoXR(txt) { ultimoSuceso = { tipo: 'hito', texto: txt }; sucesoT = performance.now(); },
   alEntrarXR() { controls.enabled = false; },
-  alSalirXR() { controls.enabled = true; camera.position.set(0.8, 1.4, 6.2); controls.target.set(0, 0, 0); controls.update(); },
+  alSalirXR() { controls.enabled = true; camera.position.copy(CAM0); controls.target.copy(MIRA0); controls.update(); },
 };
 
 const hud = crearHud({
@@ -95,6 +121,9 @@ function nuevaPartida() {
   worker.onmessage = alMensaje;
   worker.onerror = e => { console.error('Worker de simulación', e); aviso('Error en la simulación: mirá la consola'); };
   enVuelo = true; acumulado = 0; fin = false; estado = null;
+  valle?.destruir();
+  valle = crearValle(semilla);
+  mundo.add(valle.grupo);
   reloj.fijar(1);
   hud.limpiarSucesos();
   juego.seleccionar(null);
@@ -106,9 +135,17 @@ function alMensaje({ data: m }) {
   if (m.tipo === 'geo') { planeta.aplicarGeo(m); return; }
   if (m.tipo !== 'estado') return;
   enVuelo = false;
+  const V = valle.actualizar(m);
+  m.divergencia = Math.max(m.divergencia, V.divergencia);
+  m.valle = V;
+  // si la humanidad del valle ya tomó otro camino, los hitos humanos del canon se cuentan como «la historia real»
+  if (V.divergido) for (const s of m.mensajes) if (s.tipo === 'hito' && (s.a ?? m.a) <= 3e5) s.texto = `En la historia real: ${s.texto.charAt(0).toLowerCase()}${s.texto.slice(1)}`;
+  m.mensajes.push(...V.mensajes);
   estado = m;
   planeta.aplicarEstado(m);
   hud.actualizar(m);
+  hud.regalos(valle.disponibles());
+  paleta.disponibles?.(valle.disponibles());
   for (const s of m.mensajes) {
     const t = formatearTiempo(s.a ?? m.a);
     hud.suceso(s, t.anio ? `${t.hace} · ${t.anio}` : t.hace);
@@ -120,7 +157,7 @@ function alMensaje({ data: m }) {
 
 // ---------- ratón (escritorio) ----------
 const ray = new THREE.Raycaster(), puntero = new THREE.Vector2();
-const planoSol = new THREE.Plane(new THREE.Vector3(0, 1, 0), -ALTURA_SOL);
+const planoSol = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 let arrastreSol = false, angRaton = 0, pulsadoEn = null;
 function rayoRaton(ev) {
   const r = lienzo.getBoundingClientRect();
@@ -128,21 +165,23 @@ function rayoRaton(ev) {
   ray.setFromCamera(puntero, camera);
   return ray;
 }
+// ángulo del ratón alrededor del globo, en el plano de la órbita del sol
 function anguloRaton(ev) {
+  planoSol.constant = -cielo.localToWorld(new THREE.Vector3(0, ALTURA_SOL, 0)).y;
   const p = rayoRaton(ev).ray.intersectPlane(planoSol, new THREE.Vector3());
-  if (p) angRaton = Math.atan2(-p.z, p.x);
+  if (p) { cielo.worldToLocal(p); angRaton = Math.atan2(-p.z, p.x); }
   return angRaton;
 }
 // en captura: se decide antes que OrbitControls si el gesto es del sol, de un poder o de la cámara
 lienzo.addEventListener('pointerdown', ev => {
   if (renderer.xr.isPresenting || ev.button !== 0) return;
-  const h = rayoRaton(ev).intersectObjects([sol.golpe, planeta.golpe], false)[0];
+  const h = rayoRaton(ev).intersectObjects([sol.golpe, planeta.golpe, valle.golpe], false)[0];
   if (h?.object === sol.golpe) {
     arrastreSol = true; controls.enabled = false;
     reloj.agarrar(anguloRaton(ev)); juego.alAgarrarSol();
     try { lienzo.setPointerCapture(ev.pointerId); } catch { /* puntero sintético */ } lienzo.style.cursor = 'grabbing';
-  } else if (h?.object === planeta.golpe && juego.poder) {
-    controls.enabled = false; pulsadoEn = h.point.clone();
+  } else if ((h?.object === planeta.golpe || h?.object === valle.golpe) && juego.poder) {
+    controls.enabled = false; pulsadoEn = { punto: h.point.clone(), donde: h.object === valle.golpe ? 'valle' : 'planeta' };
   }
 }, { capture: true });
 lienzo.addEventListener('pointermove', ev => {
@@ -155,7 +194,7 @@ lienzo.addEventListener('pointermove', ev => {
 });
 lienzo.addEventListener('pointerup', () => {
   if (arrastreSol) { arrastreSol = false; reloj.soltar(); lienzo.style.cursor = ''; }
-  if (pulsadoEn) { juego.aplicar(pulsadoEn); pulsadoEn = null; }
+  if (pulsadoEn) { juego.aplicar(pulsadoEn.punto, pulsadoEn.donde); pulsadoEn = null; }
   controls.enabled = !renderer.xr.isPresenting;
 });
 addEventListener('keydown', ev => {
@@ -164,14 +203,17 @@ addEventListener('keydown', ev => {
 });
 
 const controls = new OrbitControls(camera, lienzo);
-controls.enableDamping = true; controls.minDistance = 2.2; controls.maxDistance = 14; controls.enablePan = false;
+// zoom hacia el cursor: de la mesa entera a las personitas
+controls.enableDamping = true; controls.minDistance = 0.12; controls.maxDistance = 16;
+controls.enablePan = true; controls.screenSpacePanning = true; controls.zoomToCursor = true;
+controls.target.copy(MIRA0); controls.update();
 
 addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
 });
 
-const xr = montarXR({ renderer, scene, camera, mundo, planeta, sol, paleta, carteles: [rotulo.sprite, panelDatos.sprite], estrellas, fondo, reloj, juego });
+const xr = montarXR({ renderer, scene, camera, mundo, cielo, golpeValle: () => valle.golpe, planeta, sol, paleta, carteles: [rotulo.sprite, panelDatos.sprite], estrellas, fondo, reloj, juego });
 
 // ---------- carteles de RM/RV ----------
 function dibujarCarteles() {
@@ -237,6 +279,7 @@ renderer.setAnimationLoop((t, frame) => {
   sol.poner(reloj.ang);
   sol.grupo.getWorldPosition(solMundo);
   planeta.porFrame(dt, reloj.velocidad, solMundo);
+  valle?.porFrame(dt, reloj.ang);
   paleta.porFrame(t / 1000);
   xr.porFrame(frame, dt);
   if (xr.modo && ahora - cartelT > 250) { cartelT = ahora; dibujarCarteles(); }
@@ -247,4 +290,4 @@ renderer.setAnimationLoop((t, frame) => {
 
 nuevaPartida();
 // depuración y pruebas
-window.__eon = { get estado() { return estado; }, saltar(dp) { acumulado += dp; }, reloj, juego, planeta, mundo, scene, camera, renderer, get semilla() { return semilla; } };
+window.__eon = { get valle() { return valle; }, cielo, get estado() { return estado; }, saltar(dp) { acumulado += dp; }, reloj, juego, planeta, mundo, scene, camera, renderer, get semilla() { return semilla; } };

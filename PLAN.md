@@ -9,6 +9,16 @@ Juego de dios en **realidad mixta** (Quest 3S, WebXR) donde la mecánica central
 
 Género de simulador de planeta y juego de dios, pero **original**: nombre, estilo y tono propios. No se copia ningún juego existente.
 
+## 0. Giro del 23-nov: el Valle
+
+El planeta solo no basta. A escala de mesa (1 : 42 millones) una persona mide 0,00004 mm y no hay zoom que la muestre. La fantasía real es **ver a los humanos en miniatura** construir, sembrar, pelear y tirar una bomba atómica, en el mismo sitio en grande y en diminuto.
+
+- **El protagonista es el Valle**: una parcela de terreno de unos 70 cm sobre la mesa, diseñada para resumir la Tierra (mar, costa, río, selva, llanura, desierto y montaña con nieve). Se agranda con las dos manos hasta que una persona mide más de 10 cm.
+- **El globo pasa a ser contexto**: chico, flotando sobre el valle, con el clima global y el sol que sigue siendo el tiempo. Lo de F0 se reutiliza como el clima de fondo del valle.
+- **Solo se simula en detalle lo que se ve**: el mundo son números; el valle tiene agentes (plantas, dinosaurios, mamíferos, personas, edificios, ejércitos) con InstancedMesh.
+- **Intervenciones = objetivo + cambio** («regalos»): festín, depredadores, plaga y bomba atómica, a la fauna o al pueblo más cercano a donde soltás. Por debajo mueven variables y las reglas sacan consecuencias con ramas por semilla.
+- **Claude, después**: la puerta para pedir cualquier «¿qué pasa si…?» en texto o voz queda preparada; Claude traduciría la idea a cambios de variables y a una crónica. Por ahora solo reglas.
+
 ---
 
 ## 1. La idea que lo sostiene todo
@@ -119,7 +129,7 @@ js/vista/           planeta (relieve por shader), sol, rótulo, paleta de orbes
 
 ## 8. Fases con puerta de calidad
 
-### F0 · La prueba en las gafas ← EN CURSO
+### F0 · La prueba en las gafas (hecha salvo probar en la Quest)
 **Objetivo**: comprobar que girar el sol sobre tu mesa y ver cambiar el planeta da gusto.
 
 - [x] Planeta procedural con semilla (`?semilla=123`): continentes, relieve, nubes y atmósfera.
@@ -141,7 +151,21 @@ js/vista/           planeta (relieve por shader), sol, rótulo, paleta de orbes
 2. Girar el sol se entiende sin explicación.
 3. Una helada o sequía bien puesta deja una huella que se ve 50 millones de años después.
 
-### F1 · La vida
+### F1 · El Valle (porción vertical) ← EN CURSO
+**Objetivo**: demostrar la fantasía de dos escalas antes de ampliar nada.
+
+- [x] Valle con biomas, mar con nivel vivo, río y corte de diorama; el globo chico encima.
+- [x] La historia real en el valle: lava → mar y roca → plantas → bosques → dinosaurios → asteroide → mamíferos → tribus → aldeas y campos → ciudad antigua (romanos y galos) → castillos → fábricas → ciudad moderna.
+- [x] Personas, dinosaurios y mamíferos que se mueven; edificios que se construyen; guerras canónicas con bajas.
+- [x] Regalos: festín, depredadores, plaga y bomba atómica (seta, onda, ruinas y dos ramas: imperio atómico o colapso).
+- [x] Zoom de mesa a personitas (rueda en el PC; dos manos en las gafas, hasta ×25).
+
+- [ ] **Probar en la Quest 3S** (en el PC va a 60 fps; en el emulador de RM el valle se apoya en la mesa, pero las gafas de verdad no se han probado). Ojo: el globo de F0 sube texturas cada 150 ms y da picos de ~45 ms en el PC.
+- [ ] Proyectil visible de un pueblo al otro antes de la bomba, humo en las fábricas, coches y aviones en la era moderna.
+
+**Puerta F1**: en las gafas, darle la bomba a los romanos se ve en grande (la seta en la mesa) y en pequeño (las personitas huyendo), y la historia sigue por otro camino visible.
+
+### F1b · La vida
 Genoma de especies, criaturas por piezas visibles con la lupa, salida del agua y patas, depredadores y poderes de catástrofe. **Puerta**: dos partidas con cambios distintos se ven DISTINTAS.
 
 ### F2 · Big Bang en la habitación + canon real

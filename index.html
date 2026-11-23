@@ -55,8 +55,9 @@
   #mando { position: fixed; left: 14px; right: 14px; bottom: 14px; display: flex; align-items: center; gap: 8px; padding: 8px; z-index: 6; flex-wrap: wrap; }
   #mando .grupo { display: flex; gap: 4px; }
   #mando .sep { flex: 1; }
-  #poderes button { display: flex; align-items: center; gap: 7px; }
-  #poderes button i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  #poderes button, #regalos button { display: flex; align-items: center; gap: 7px; }
+  #regalos { padding-left: 8px; border-left: 1px solid var(--linea); }
+  #poderes button i, #regalos button i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
   #btnAR, #btnVR { background: var(--tinta); color: #0b0d14; font-weight: 600; }
 
   #ayuda { position: fixed; left: 50%; top: 18px; transform: translateX(-50%); padding: 9px 16px; font-size: 13px; z-index: 7; pointer-events: none; transition: opacity .6s; }
@@ -102,7 +103,8 @@
     <button data-vel="3">×3</button>
     <button data-vel="8">×8</button>
   </div>
-  <div class="grupo" id="poderes"></div>
+  <div class="grupo" id="poderes" title="Clima: soltalo sobre el valle o sobre el globo"></div>
+  <div class="grupo" id="regalos" title="Regalos: soltalos sobre el valle, cerca de a quién se los das"></div>
   <span class="sep"></span>
   <button id="btnDatos">Datos</button>
   <button id="btnNueva" title="Otro planeta con otra semilla">Nueva partida</button>
@@ -110,7 +112,7 @@
   <button id="btnVR" disabled title="Realidad virtual (Quest)">Entrar en RV</button>
 </footer>
 
-<div id="ayuda" class="caja">Arrastrá el sol alrededor del planeta para que pase el tiempo</div>
+<div id="ayuda" class="caja">Arrastrá el sol alrededor del globo para que pase el tiempo · rueda para acercarte al valle</div>
 <div id="aviso" class="caja" hidden></div>
 <!-- ?emular: emulador de gafas (IWER) antes de arrancar; ver js/emulador.js -->
 <script type="module">if (new URLSearchParams(location.search).has('emular')) await import('./js/emulador.js').catch(e => console.error('Emulador WebXR no disponible', e)); await import('./js/app.js');</script>

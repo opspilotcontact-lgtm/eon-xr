@@ -1,5 +1,6 @@
 // Interfaz HTML de escritorio: reloj, divergencia, sucesos, datos del mundo y mandos.
 import { PODERES } from './poderes.js';
+import { REGALOS } from './valle/regalos.js';
 import { HITOS, pDe } from './sim/canon.js';
 import { contenidoDatos } from './datos.js';
 
@@ -19,6 +20,13 @@ export function crearHud({ alPoder, alVelocidad, alNueva }) {
     b.addEventListener('click', () => alPoder(id));
     cont.appendChild(b);
   }
+  const contR = $('regalos');
+  for (const [id, R] of Object.entries(REGALOS)) {
+    const b = document.createElement('button'); b.dataset.poder = id; b.title = R.ayuda;
+    b.innerHTML = `<i style="background:${R.color}"></i>${R.nombre}`;
+    b.addEventListener('click', () => alPoder(id));
+    contR.appendChild(b);
+  }
   for (const b of $('velocidades').querySelectorAll('button')) b.addEventListener('click', () => alVelocidad(Number(b.dataset.vel)));
   $('btnNueva').addEventListener('click', alNueva);
   $('btnDatos').addEventListener('click', () => document.body.classList.toggle('ver-datos'));
@@ -29,7 +37,8 @@ export function crearHud({ alPoder, alVelocidad, alNueva }) {
 
   let claveTablas = '';
   return {
-    marcarPoder(id) { for (const b of cont.querySelectorAll('button')) b.classList.toggle('on', b.dataset.poder === id); },
+    marcarPoder(id) { for (const b of [...cont.querySelectorAll('button'), ...contR.querySelectorAll('button')]) b.classList.toggle('on', b.dataset.poder === id); },
+    regalos(set) { for (const b of contR.querySelectorAll('button')) b.disabled = !set.has(b.dataset.poder); },
     velocidad(v, agarrado) {
       $('vel').textContent = agarrado ? `Sujetando el sol · ×${v.toFixed(1).replace('.', ',')}` : v < 0.05 ? 'Tiempo detenido' : `Tiempo ×${v.toFixed(1).replace('.', ',')}`;
       for (const b of $('velocidades').querySelectorAll('button')) {
