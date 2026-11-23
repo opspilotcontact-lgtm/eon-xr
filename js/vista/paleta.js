@@ -5,8 +5,8 @@ import { PODERES } from '../poderes.js';
 import { REGALOS } from '../valle/regalos.js';
 import { crearCartel } from './rotulo.js';
 
-const FILAS = [{ lista: PODERES, y: 0.62 }, { lista: REGALOS, y: 0.3 }];
-const Z = 3.55, SEP = 0.5;
+const FILAS = [{ lista: PODERES, y: 0.7 }, { lista: REGALOS, y: 0.34 }];
+const Z = 5.0, SEP = 0.6;
 
 export function crearPaleta() {
   const grupo = new THREE.Group(); grupo.name = 'paleta'; grupo.visible = false;

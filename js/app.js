@@ -31,7 +31,7 @@ const scene = new THREE.Scene();
 const fondo = new THREE.Color('#05060a');
 scene.background = fondo;
 const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.01, 200);
-const CAM0 = new THREE.Vector3(0, 3.4, 7.2), MIRA0 = new THREE.Vector3(0, 0.35, 0);
+const CAM0 = new THREE.Vector3(0, 4.8, 10.4), MIRA0 = new THREE.Vector3(0, 0.3, 0.4);
 camera.position.copy(CAM0);
 
 const mundo = new THREE.Group(); mundo.name = 'mundo';
@@ -40,7 +40,7 @@ const planeta = crearPlaneta();
 const sol = crearSol();
 // el cielo: globo chico flotando detrás del valle, con el sol que orbita (= el tiempo)
 const cielo = new THREE.Group(); cielo.name = 'cielo';
-cielo.position.set(0, 2.25, -3.5); cielo.scale.setScalar(0.42);
+cielo.position.set(0, 2.7, -5.3); cielo.scale.setScalar(0.55);
 cielo.add(planeta.grupo, sol.grupo, sol.luz, sol.objetivo);
 mundo.add(cielo);
 scene.add(new THREE.HemisphereLight('#c8d4ff', '#3a2c20', 0.65));
@@ -65,9 +65,9 @@ mundo.add(paleta.grupo);
 
 // carteles de RM/RV: rótulo sobre el planeta y panel de datos a un lado (en el escritorio va en HTML)
 const rotulo = crearCartel(1024, 300, 2.3);
-rotulo.sprite.position.set(0, 3.55, -3.5); rotulo.sprite.visible = false;
+rotulo.sprite.position.set(0, 4.3, -5.3); rotulo.sprite.visible = false;
 const panelDatos = crearCartel(1024, 1280, 2.1);
-panelDatos.sprite.position.set(-4.4, 1.3, 0.2); panelDatos.sprite.visible = false;
+panelDatos.sprite.position.set(-6.2, 1.5, 0.3); panelDatos.sprite.visible = false;
 mundo.add(rotulo.sprite, panelDatos.sprite);
 
 // ---------- estado de la partida ----------
@@ -204,7 +204,7 @@ addEventListener('keydown', ev => {
 
 const controls = new OrbitControls(camera, lienzo);
 // zoom hacia el cursor: de la mesa entera a las personitas
-controls.enableDamping = true; controls.minDistance = 0.12; controls.maxDistance = 16;
+controls.enableDamping = true; controls.minDistance = 0.12; controls.maxDistance = 24;
 controls.enablePan = true; controls.screenSpacePanning = true; controls.zoomToCursor = true;
 controls.target.copy(MIRA0); controls.update();
 
@@ -263,7 +263,7 @@ function dibujarCarteles() {
 
 // ---------- bucle ----------
 const reloj3 = new THREE.Clock();
-const solMundo = new THREE.Vector3();
+const solMundo = new THREE.Vector3(), camMundo = new THREE.Vector3();
 let cartelT = 0;
 renderer.setAnimationLoop((t, frame) => {
   const dt = Math.min(0.1, reloj3.getDelta());
@@ -279,7 +279,7 @@ renderer.setAnimationLoop((t, frame) => {
   sol.poner(reloj.ang);
   sol.grupo.getWorldPosition(solMundo);
   planeta.porFrame(dt, reloj.velocidad, solMundo);
-  valle?.porFrame(dt, reloj.ang);
+  valle?.porFrame(dt, reloj.ang, (renderer.xr.isPresenting ? renderer.xr.getCamera() : camera).getWorldPosition(camMundo));
   paleta.porFrame(t / 1000);
   xr.porFrame(frame, dt);
   if (xr.modo && ahora - cartelT > 250) { cartelT = ahora; dibujarCarteles(); }
@@ -290,4 +290,4 @@ renderer.setAnimationLoop((t, frame) => {
 
 nuevaPartida();
 // depuración y pruebas
-window.__eon = { get valle() { return valle; }, cielo, get estado() { return estado; }, saltar(dp) { acumulado += dp; }, reloj, juego, planeta, mundo, scene, camera, renderer, get semilla() { return semilla; } };
+window.__eon = { get valle() { return valle; }, cielo, controls, get estado() { return estado; }, saltar(dp) { acumulado += dp; }, reloj, juego, planeta, mundo, scene, camera, renderer, get semilla() { return semilla; } };

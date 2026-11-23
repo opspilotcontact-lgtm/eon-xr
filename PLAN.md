@@ -13,7 +13,7 @@ Género de simulador de planeta y juego de dios, pero **original**: nombre, esti
 
 El planeta solo no basta. A escala de mesa (1 : 42 millones) una persona mide 0,00004 mm y no hay zoom que la muestre. La fantasía real es **ver a los humanos en miniatura** construir, sembrar, pelear y tirar una bomba atómica, en el mismo sitio en grande y en diminuto.
 
-- **El protagonista es el Valle**: una parcela de terreno de unos 70 cm sobre la mesa, diseñada para resumir la Tierra (mar, costa, río, selva, llanura, desierto y montaña con nieve). Se agranda con las dos manos hasta que una persona mide más de 10 cm.
+- **El protagonista es el Valle**: una parcela de terreno de unos 80 cm sobre la mesa, diseñada para resumir la Tierra (mar, costa, río, selva, llanura, desierto y montaña con nieve). Se agranda con las dos manos hasta que una persona mide más de 10 cm.
 - **El globo pasa a ser contexto**: chico, flotando sobre el valle, con el clima global y el sol que sigue siendo el tiempo. Lo de F0 se reutiliza como el clima de fondo del valle.
 - **Solo se simula en detalle lo que se ve**: el mundo son números; el valle tiene agentes (plantas, dinosaurios, mamíferos, personas, edificios, ejércitos) con InstancedMesh.
 - **Intervenciones = objetivo + cambio** («regalos»): festín, depredadores, plaga y bomba atómica, a la fauna o al pueblo más cercano a donde soltás. Por debajo mueven variables y las reglas sacan consecuencias con ramas por semilla.
@@ -158,10 +158,12 @@ js/vista/           planeta (relieve por shader), sol, rótulo, paleta de orbes
 - [x] La historia real en el valle: lava → mar y roca → plantas → bosques → dinosaurios → asteroide → mamíferos → tribus → aldeas y campos → ciudad antigua (romanos y galos) → castillos → fábricas → ciudad moderna.
 - [x] Personas, dinosaurios y mamíferos que se mueven; edificios que se construyen; guerras canónicas con bajas.
 - [x] Regalos: festín, depredadores, plaga y bomba atómica (seta, onda, ruinas y dos ramas: imperio atómico o colapso).
-- [x] Zoom de mesa a personitas (rueda en el PC; dos manos en las gafas, hasta ×25).
+- [x] Zoom de mesa a personitas (rueda en el PC; dos manos en las gafas, hasta ×33).
 
 - [ ] **Probar en la Quest 3S** (en el PC va a 60 fps; en el emulador de RM el valle se apoya en la mesa, pero las gafas de verdad no se han probado). Ojo: el globo de F0 sube texturas cada 150 ms y da picos de ~45 ms en el PC.
-- [ ] Proyectil visible de un pueblo al otro antes de la bomba, humo en las fábricas, coches y aviones en la era moderna.
+- [x] Valle de 9 × 9 (≈81 cm en la mesa) con más biomas: isla, lago, oasis, taiga, bosque, selva, sabana, desierto y cordillera.
+- [x] Detalle por época: calles en rejilla, carretera con puente, calzada romana → asfalto, tren, coliseo (se queda hasta hoy), templo, acueducto, puerto, castillo, iglesia, molinos, estación, estadio, aeropuerto con aviones que despegan, dan la vuelta y aterrizan, carros, coches, trirremes, vapores, cargueros, naves del futuro, humo de fábricas; peces, plesiosaurios, ballenas, pterosaurios, aves, mamuts y ganado.
+- [ ] Proyectil visible de un pueblo al otro antes de la bomba; tanques y aviones en las guerras modernas; más tipos de casa por cultura.
 
 **Puerta F1**: en las gafas, darle la bomba a los romanos se ve en grande (la seta en la mesa) y en pequeño (las personitas huyendo), y la historia sigue por otro camino visible.
 

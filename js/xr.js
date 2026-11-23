@@ -9,9 +9,9 @@ import { aviso } from './hud.js';
 const UP = new THREE.Vector3(0, 1, 0);
 const yawQ = a => new THREE.Quaternion().setFromAxisAngle(UP, a);
 const angXZ = v => Math.atan2(-v.z, v.x);
-export const ESCALA_XR = 0.12;          // metros por unidad: el valle (6 u) mide ~72 cm sobre la mesa
-const ESC_MIN = 0.03, ESC_MAX = 3.0;     // hasta ×25: una persona del valle llega a medir ~14 cm
-const SOBRE_MESA = 0.056;               // origen del mundo por encima de la mesa (m): la base del diorama queda apoyada
+export const ESCALA_XR = 0.09;          // metros por unidad: el valle (9 u) mide ~81 cm sobre la mesa
+const ESC_MIN = 0.03, ESC_MAX = 3.0;     // hasta ×33: una persona del valle llega a medir ~14 cm
+const SOBRE_MESA = 0.05;                // origen del mundo por encima de la mesa (m): la base del diorama queda apoyada
 const BUSCAR_MESA = 8;                  // segundos buscando una mesa al entrar en RM
 
 export function montarXR({ renderer, scene, camera, mundo, cielo, golpeValle, planeta, sol, paleta, carteles, estrellas, fondo, reloj, juego }) {

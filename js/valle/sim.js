@@ -22,7 +22,7 @@ export const COLOR_PUEBLO = { A: '#c8463c', B: '#3f7fd0' };
 export const nivelCanon = a => a > 6e6 ? -1 : a > 3e5 ? 0 : a > 1.2e4 ? 1 : a > 5000 ? 2 : a > 1550 ? 3 : a > 237 ? 4 : a > 80 ? 5 : 6;
 
 // personas que se ven en el valle (no son cifras reales: es la miniatura)
-const GENTE = [[6e6, 4, 0], [3e5, 8, 5], [1.2e4, 20, 10], [5000, 40, 18], [1550, 70, 30], [237, 100, 45], [80, 150, 60], [0, 210, 80]];
+const GENTE = [[6e6, 5, 0], [3e5, 10, 6], [1.2e4, 24, 12], [5000, 48, 22], [1550, 80, 34], [237, 115, 50], [80, 170, 70], [0, 240, 95]];
 function genteCanon(a) {
   if (a >= GENTE[0][0]) return [GENTE[0][1], 0];
   for (let i = 0; i < GENTE.length - 1; i++) {
